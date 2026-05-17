@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Test-Path \"D:\\\\IT\\\\FlowMind\"; \\(Get-Item \"D:\\\\IT\\\\FlowMind\"\\).GetType\\(\\).Name)",
+      "PowerShell(Get-ChildItem \"D:\\\\IT\\\\FlowMind\" -Force -Recurse | ForEach-Object { $_.FullName })",
+      "PowerShell(Invoke-RestMethod -Uri \"http://127.0.0.1:8000/api/health\" -Method GET -ErrorAction SilentlyContinue | ConvertTo-Json)",
+      "PowerShell(& \"D:\\\\IT\\\\FlowMind\\\\backend\\\\.venv\\\\Scripts\\\\python.exe\" -c \"import google.generativeai; print\\('google-generativeai OK:', google.generativeai.__version__\\)\" 2>&1)",
+      "PowerShell(& \"D:\\\\IT\\\\FlowMind\\\\backend\\\\.venv\\\\Scripts\\\\python.exe\" -c \"import fastapi, uvicorn, sqlmodel; print\\('FastAPI OK'\\)\" 2>&1)",
+      "PowerShell($body = '{\"question\": \"Привет, есть ли кассовый разрыв?\", \"horizon_days\": 30}'; Invoke-RestMethod -Uri \"http://127.0.0.1:8000/api/ai/ask\" -Method POST -Body $body -ContentType \"application/json\" | Select-Object -ExpandProperty answer | ForEach-Object { $_.Substring\\(0, [Math]::Min\\(200, $_.Length\\)\\) })",
+      "PowerShell($body = '{\"question\": \"test\", \"horizon_days\": 30}'; try { Invoke-RestMethod -Uri \"http://127.0.0.1:8000/api/ai/ask\" -Method POST -Body $body -ContentType \"application/json\" } catch { $_.Exception.Response.GetResponseStream\\(\\) | ForEach-Object { $reader = [System.IO.StreamReader]::new\\($_\\); $reader.ReadToEnd\\(\\) } })",
+      "PowerShell($body = '{\"question\": \"test\", \"horizon_days\": 30}'; $result = Invoke-WebRequest -Uri \"http://127.0.0.1:8000/api/ai/ask\" -Method POST -Body $body -ContentType \"application/json\" -ErrorAction SilentlyContinue; Write-Host \"Status:\" $result.StatusCode; Write-Host \"Body:\" $result.Content)",
+      "PowerShell($body = '{\"question\": \"test\", \"horizon_days\": 30}'; try { Invoke-WebRequest -Uri \"http://127.0.0.1:8000/api/ai/ask\" -Method POST -Body $body -ContentType \"application/json\" } catch [System.Net.WebException] { $response = $_.Exception.Response; $stream = $response.GetResponseStream\\(\\); $reader = New-Object System.IO.StreamReader\\($stream\\); $reader.ReadToEnd\\(\\) })",
+      "PowerShell($body = '{\"question\": \"Есть ли кассовый разрыв в ближайшие 30 дней?\", \"horizon_days\": 30}'; Invoke-RestMethod -Uri \"http://127.0.0.1:8000/api/ai/ask\" -Method POST -Body $body -ContentType \"application/json\" | Select-Object -ExpandProperty answer | ForEach-Object { $_.Substring\\(0, [Math]::Min\\(300, $_.Length\\)\\) })",
+      "PowerShell(Stop-Process *)",
+      "PowerShell([Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $body = '{\"question\": \"Есть ли кассовый разрыв?\", \"horizon_days\": 30}'; $r = Invoke-RestMethod -Uri \"http://127.0.0.1:8000/api/ai/ask\" -Method POST -Body $body -ContentType \"application/json\"; $r.answer.Substring\\(0, [Math]::Min\\(300, $r.answer.Length\\)\\))",
+      "PowerShell(Invoke-RestMethod -Uri \"http://127.0.0.1:8000/api/health\" -ErrorAction SilentlyContinue | ConvertTo-Json)",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:5173\" -UseBasicParsing -TimeoutSec 3 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty StatusCode)",
+      "PowerShell(Set-Location \"D:\\\\IT\\\\FlowMind\\\\frontend\"; Start-Process -FilePath \"cmd.exe\" -ArgumentList \"/k npm run dev\" -WindowStyle Normal; Start-Sleep -Seconds 8; Invoke-WebRequest -Uri \"http://localhost:5173\" -UseBasicParsing -TimeoutSec 5 -ErrorAction SilentlyContinue | Select-Object StatusCode, @{N='OK';E={$_.StatusCode -eq 200}})",
+      "PowerShell(Start-Sleep -Seconds 5; try { $r = Invoke-WebRequest -Uri \"http://localhost:5173\" -UseBasicParsing -TimeoutSec 8; Write-Host \"Frontend status:\" $r.StatusCode } catch { Write-Host \"Not up yet:\" $_.Exception.Message })",
+      "PowerShell(Set-Location \"D:\\\\IT\\\\FlowMind\\\\frontend\"; Start-Process -FilePath \"powershell.exe\" -ArgumentList \"-NoExit\", \"-Command\", \"Set-Location 'D:\\\\IT\\\\FlowMind\\\\frontend'; npm run dev\" -WindowStyle Normal; Write-Host \"Frontend window launched\")",
+      "PowerShell(Start-Sleep -Seconds 10; try { $r = Invoke-WebRequest -Uri \"http://localhost:5173\" -UseBasicParsing -TimeoutSec 8; Write-Host \"✅ Frontend is UP - Status:\" $r.StatusCode } catch { Write-Host \"❌ Still not up:\" $_.Exception.Message })",
+      "PowerShell(Start-Process \"http://localhost:5173\")",
+      "PowerShell(Set-Location \"D:\\\\IT\\\\FlowMind\\\\backend\"; Start-Process -FilePath \".\\\\.venv\\\\Scripts\\\\python.exe\" -ArgumentList \"run.py\" -WindowStyle Normal; Start-Sleep -Seconds 4; [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; Write-Host \"--- Simulate ---\"; $sim = Invoke-RestMethod -Uri \"http://127.0.0.1:8000/api/cashflow/simulate?horizon_days=30\"; Write-Host \"Min balance: $\\($sim.min_balance\\) on $\\($sim.min_balance_day\\)\"; Write-Host \"Gaps detected: $\\($sim.gaps.Count\\)\"; foreach \\($g in $sim.gaps\\) { Write-Host \"  $\\($g.start\\) - $\\($g.end\\), depth $\\($g.max_depth\\)\" })"
+    ]
+  }
+}
