@@ -5,7 +5,7 @@
 import { api } from './api.js';
 import { seedData } from './seed.js';
 
-const KEY = 'flowmind:v2';
+const KEY = 'flowmind:v3';
 const listeners = new Set();
 
 function defaults() {

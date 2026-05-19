@@ -40,9 +40,11 @@ def advise(
     expenses = list(expenses)
     contracts = list(contracts)
     suggestions: list[Suggestion] = []
+    seen_expense_ids: set = set()
+    seen_contract_ids: set = set()
 
     for gap in sim.gaps:
-        suggestions.extend(_suggest_for_gap(gap, contracts, expenses))
+        suggestions.extend(_suggest_for_gap(gap, contracts, expenses, seen_expense_ids, seen_contract_ids))
 
     suggestions.sort(key=lambda s: s.impact, reverse=True)
     return suggestions
@@ -52,6 +54,8 @@ def _suggest_for_gap(
     gap: GapWindow,
     contracts: list[Contract],
     expenses: list[Expense],
+    seen_expense_ids: set,
+    seen_contract_ids: set,
 ) -> list[Suggestion]:
     out: list[Suggestion] = []
     gap_start = date.fromisoformat(gap.start)
@@ -60,10 +64,11 @@ def _suggest_for_gap(
     # 1) Defer expenses that fall inside the gap window — largest first.
     in_gap_expenses = [
         e for e in expenses
-        if e.status == "scheduled" and gap_start <= e.due_date <= gap_end
+        if e.status == "scheduled" and gap_start <= e.due_date <= gap_end and e.id not in seen_expense_ids
     ]
     in_gap_expenses.sort(key=lambda e: e.amount, reverse=True)
     for e in in_gap_expenses[:3]:
+        seen_expense_ids.add(e.id)
         new_date = gap_end + timedelta(days=2)
         out.append(Suggestion(
             kind="defer_expense",
@@ -84,14 +89,16 @@ def _suggest_for_gap(
     # 2) Pull forward inflows expected after the gap.
     later_inflows = [
         c for c in contracts
-        if c.status == "expected" and c.expected_date > gap_end
+        if c.status == "expected" and c.expected_date > gap_end and c.id not in seen_contract_ids
     ]
     later_inflows.sort(key=lambda c: c.amount, reverse=True)
     for c in later_inflows[:2]:
+        seen_contract_ids.add(c.id)
+        counterparty = c.counterparty_name or c.client_id or c.title
         ask = max(c.amount * 0.15, gap.max_depth * 0.25)
         out.append(Suggestion(
             kind="pull_inflow",
-            headline=f"Запросите у клиента «{c.title}» аванс ≈{ask:,.0f} {c.currency}",
+            headline=f"Запросите у «{counterparty}» аванс ≈{ask:,.0f} {c.currency}",
             detail=(
                 f"Поступление {c.amount:,.0f} {c.currency} ожидается {_iso(c.expected_date)}, "
                 f"уже после окна разрыва ({gap.start}–{gap.end}). Частичная предоплата "

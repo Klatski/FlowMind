@@ -70,30 +70,38 @@ function windowFrom(window) {
 export function advise({ openingBalance, contracts, expenses }, sim) {
   if (!sim.gaps.length) return [];
   const suggestions = [];
+  const seenExpenseIds = new Set();
+  const seenContractIds = new Set();
+
   for (const gap of sim.gaps) {
     const inGap = expenses.filter(
-      (e) => e.status === 'scheduled' && e.due_date >= gap.start && e.due_date <= gap.end,
+      (e) => e.status === 'scheduled' && e.due_date >= gap.start && e.due_date <= gap.end && !seenExpenseIds.has(e.id),
     );
     inGap.sort((a, b) => b.amount - a.amount);
     for (const e of inGap.slice(0, 3)) {
+      seenExpenseIds.add(e.id);
       const newDate = format(addDays(new Date(gap.end), 2), 'yyyy-MM-dd');
       suggestions.push({
         kind: 'defer_expense',
         headline: `Перенесите «${e.title}» с ${e.due_date} на ${newDate}`,
         detail: `Снимет нагрузку ${fmt(e.amount)} ${e.currency} из окна разрыва.`,
         impact: Math.min(Number(e.amount), gap.max_depth),
+        payload: { expense_id: e.id, from_date: e.due_date, to_date: newDate },
       });
     }
     const laterInflows = contracts
-      .filter((c) => c.status === 'expected' && c.expected_date > gap.end)
+      .filter((c) => c.status === 'expected' && c.expected_date > gap.end && !seenContractIds.has(c.id))
       .sort((a, b) => b.amount - a.amount);
     for (const c of laterInflows.slice(0, 2)) {
+      seenContractIds.add(c.id);
+      const counterparty = c.counterparty_name || c.client_id || c.title;
       const ask = Math.max(Number(c.amount) * 0.15, gap.max_depth * 0.25);
       suggestions.push({
         kind: 'pull_inflow',
-        headline: `Запросите у клиента «${c.title}» аванс ≈${fmt(ask)} ${c.currency}`,
-        detail: `Поступление ${fmt(c.amount)} ожидается ${c.expected_date} — уже после окна.`,
+        headline: `Запросите у «${counterparty}» аванс ≈${fmt(ask)} ${c.currency}`,
+        detail: `Поступление ${fmt(c.amount)} ожидается ${c.expected_date} — уже после окна разрыва.`,
         impact: Math.min(ask, gap.max_depth),
+        payload: { contract_id: c.id, ask_amount: ask, by_date: gap.start },
       });
     }
     suggestions.push({
@@ -101,6 +109,7 @@ export function advise({ openingBalance, contracts, expenses }, sim) {
       headline: `Вам нужен овердрафт на ${fmt(gap.max_depth)} на ${gap.days} дн (${gap.start} — ${gap.end})`,
       detail: 'Запасной вариант: открыть овердрафт у банка-партнёра под пиковую глубину разрыва.',
       impact: gap.max_depth,
+      payload: { amount: gap.max_depth, days: gap.days, from_date: gap.start, to_date: gap.end },
     });
   }
   return suggestions.sort((a, b) => b.impact - a.impact);
