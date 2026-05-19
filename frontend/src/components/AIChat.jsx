@@ -61,6 +61,19 @@ export default function AIChat({ state, onShowOnChart, proposing = false }) {
     return '';
   }
 
+  function messageRelatesToChart(content) {
+    const keywords = [
+      'график', 'диаграмм', 'кривая', 'тренд', 'динамик',
+      'сценари', 'прогноз', 'изменени', 'изменится', 'измените',
+      'разрыв', 'риск', 'ликвидност', 'перераспредел',
+      'увеличи', 'уменьши', 'снижени', 'рост', 'упадёт', 'поднимет',
+      'смоделиру', 'симуляц', 'наглядно', 'покажет', 'отобразит',
+      'показател', 'баланс', 'резерв', 'задержк', 'сдвин',
+    ];
+    const lower = content.toLowerCase();
+    return keywords.some(kw => lower.includes(kw));
+  }
+
   useEffect(() => {
     if (scrollerRef.current) scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
   }, [state.chatHistory, busy]);
@@ -123,7 +136,7 @@ export default function AIChat({ state, onShowOnChart, proposing = false }) {
         {state.chatHistory.map((m, i) => (
           <div key={i}>
             <Message role={m.role} content={m.content} />
-            {m.role === 'assistant' && i === lastAssistantIdx && !busy && onShowOnChart && (
+            {m.role === 'assistant' && i === lastAssistantIdx && !busy && onShowOnChart && messageRelatesToChart(m.content) && (
               <div className="chat-action-bar">
                 <button
                   className="chat-action-btn"
