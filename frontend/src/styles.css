@@ -646,3 +646,285 @@ select option:hover { background-color: #1e3a8a; color: #fff; }
   animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Login page ───────────────────────────────────────────────────── */
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 4vw, 48px);
+  overflow-y: auto;
+  background:
+    radial-gradient(800px 600px at 15% 10%, rgba(59, 130, 246, 0.18) 0%, transparent 60%),
+    radial-gradient(900px 700px at 95% 90%, rgba(34, 211, 238, 0.14) 0%, transparent 60%),
+    var(--bg-0);
+}
+.login-bg-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  pointer-events: none;
+}
+.login-shell {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  z-index: 1;
+}
+.login-card {
+  background: linear-gradient(180deg, rgba(17, 29, 63, 0.85), rgba(11, 21, 48, 0.85));
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: clamp(24px, 4vw, 40px);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(14px);
+}
+.login-brand {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 24px;
+}
+.login-brand-name { font-size: 20px; font-weight: 700; }
+.login-brand-tag { font-size: 12px; color: var(--text-3); }
+.login-title {
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 700; margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+.login-sub {
+  color: var(--text-3); font-size: 13px; line-height: 1.55;
+  margin: 0 0 22px;
+}
+.login-form { display: flex; flex-direction: column; gap: 12px; }
+.login-field { display: flex; flex-direction: column; gap: 6px; }
+.login-field > span { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; }
+.login-input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: var(--text-1);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.login-input:focus { border-color: rgba(59, 130, 246, 0.6); background: rgba(255,255,255,0.06); }
+.login-error {
+  color: #fecaca;
+  background: var(--danger-soft);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+.login-submit {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+}
+
+.login-divider {
+  display: flex; align-items: center;
+  margin: 24px 0 16px;
+  color: var(--text-3); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  gap: 12px;
+}
+.login-divider::before, .login-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+.demo-grid { display: flex; flex-direction: column; gap: 10px; }
+.demo-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  width: 100%;
+  color: inherit;
+}
+.demo-card:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+.demo-card:active { transform: scale(0.99); }
+.demo-avatar {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 15px; color: white;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+.demo-info { flex: 1; min-width: 0; }
+.demo-name { font-weight: 600; font-size: 14px; color: var(--text-1); }
+.demo-bin {
+  font-size: 11px; color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+.demo-tag { font-size: 12px; color: var(--text-2); margin-top: 4px; }
+.demo-pass {
+  font-size: 11px; color: var(--text-3);
+  margin-top: 4px;
+}
+.demo-pass code {
+  background: rgba(34, 211, 238, 0.10);
+  color: #67e8f9;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, 'JetBrains Mono', Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+.demo-arrow { color: var(--text-3); font-size: 18px; flex-shrink: 0; }
+.demo-card:hover .demo-arrow { color: var(--accent-2); }
+
+.login-pass-wrap { position: relative; display: flex; }
+.login-pass-wrap .login-input { flex: 1; padding-right: 44px; }
+.login-pass-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px; height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.7;
+  display: flex; align-items: center; justify-content: center;
+}
+.login-pass-toggle:hover { opacity: 1; background: rgba(255,255,255,0.05); }
+
+.login-foot {
+  margin-top: 22px;
+  font-size: 11px;
+  color: var(--text-3);
+  text-align: center;
+  line-height: 1.5;
+}
+
+@media (max-width: 520px) {
+  .login-card { border-radius: 18px; padding: 20px; }
+  .login-input { font-size: 16px; padding: 12px 14px; }
+}
+
+/* ── Account card + switcher in sidebar ───────────────────────────── */
+.account-card {
+  position: relative;
+  margin: 4px 0 14px;
+}
+.account-card-inner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.account-card-inner:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+.account-avatar {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; color: white;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+.account-avatar.sm { width: 28px; height: 28px; font-size: 11px; border-radius: 8px; }
+.account-info { flex: 1; min-width: 0; }
+.account-name {
+  font-size: 13px; font-weight: 600; color: var(--text-1);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.account-meta {
+  font-size: 11px; color: var(--text-3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-top: 1px;
+}
+.account-chevron {
+  color: var(--text-3); font-size: 14px;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.account-chevron.open { transform: rotate(180deg); color: var(--text-1); }
+
+.account-switcher {
+  position: absolute;
+  top: calc(100% + 6px); left: 0; right: 0;
+  background: linear-gradient(180deg, #15224d, #0b1530);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
+  z-index: 50;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.account-switch-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+  overflow: hidden;
+}
+.account-switch-item:hover { background: rgba(255, 255, 255, 0.05); }
+.account-switch-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.account-switch-text .account-name,
+.account-switch-text .account-meta {
+  font-size: 12px;
+}
+.account-switch-text .account-meta { font-size: 11px; }
+.account-switch-item.logout {
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+.account-switch-item.logout:hover { background: rgba(239, 68, 68, 0.1); }
+.logout-avatar {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  box-shadow: none;
+}
+
+@media (max-width: 860px) {
+  .account-card { margin: 0 8px 0 0; flex-shrink: 0; }
+  .account-card-inner { padding: 6px 10px; }
+  .account-info { display: none; }
+  .account-chevron { display: none; }
+  .account-switcher {
+    top: calc(100% + 8px); left: auto; right: 0;
+    width: 260px;
+  }
+}

@@ -1,11 +1,10 @@
-// Offline-first storage. LocalStorage is the source of truth in the browser.
-// On startup we try to pull from the backend; on every mutation we debounce a
-// push back. This is intentionally simple (last-write-wins) — appropriate for
-// a single-user hackathon demo.
+// Offline-first storage. Each account has its own slot in localStorage; the
+// current session points at one of them via the auth record. On switch/login
+// we load the right slot and push it to the backend so AI/sync work against
+// the active account's data.
 import { api } from './api.js';
-import { seedData } from './seed.js';
+import { dataKey, seedForAccount, getAuth as readAuth } from './accounts.js';
 
-const KEY = 'flowmind:v4';
 const listeners = new Set();
 
 function defaults() {
@@ -19,16 +18,25 @@ function defaults() {
   };
 }
 
+function currentKey() {
+  const auth = readAuth();
+  return auth?.bin ? dataKey(auth.bin) : null;
+}
+
 function read() {
+  const key = currentKey();
+  if (!key) return null;
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return null;
     return { ...defaults(), ...JSON.parse(raw) };
   } catch { return null; }
 }
 
-function write(state) {
-  localStorage.setItem(KEY, JSON.stringify(state));
+function write(s) {
+  const key = currentKey();
+  if (!key) return;
+  localStorage.setItem(key, JSON.stringify(s));
 }
 
 let state = read();
@@ -40,27 +48,28 @@ function schedulePush() {
   pushTimer = setTimeout(() => pushNow(), 1500);
 }
 
-export async function init() {
+/**
+ * Initialize storage for the currently-authenticated account.
+ * If localStorage has data for this account, use it; otherwise seed it from
+ * the account-specific demo dataset. Then sync with the backend.
+ */
+export async function init(account) {
+  if (!account) {
+    state = null;
+    notify();
+    return;
+  }
+
+  state = read();
   if (!state) {
-    state = { ...defaults(), ...seedData() };
+    state = { ...defaults(), ...seedForAccount(account) };
     write(state);
   }
   notify();
 
-  const pulled = await api.pull();
-  if (pulled.ok && pulled.data && (pulled.data.contracts?.length || pulled.data.expenses?.length)) {
-    state = {
-      ...state,
-      openingBalance: pulled.data.opening_balance || state.openingBalance,
-      contracts: pulled.data.contracts.map((c) => ({ ...c, id: String(c.id) })),
-      expenses: pulled.data.expenses.map((e) => ({ ...e, id: String(e.id) })),
-      sync: { ...state.sync, lastPulled: new Date().toISOString(), online: true },
-    };
-    write(state);
-    notify();
-  } else {
-    pushNow();
-  }
+  // Push our local truth to the backend so AI/sync see this account's data.
+  // Backend is single-tenant, so we own the slot while logged in.
+  await pushNow();
 }
 
 export function subscribe(fn) {
@@ -72,6 +81,7 @@ export function subscribe(fn) {
 export function getState() { return state; }
 
 export function patch(part) {
+  if (!state) return;
   state = { ...state, ...part };
   write(state);
   notify();
@@ -110,7 +120,15 @@ export function setTelegram(part) {
   patch({ telegram: { ...state.telegram, ...part } });
 }
 
+/** Clear in-memory state (used on logout). LocalStorage slot is preserved. */
+export function detach() {
+  state = null;
+  clearTimeout(pushTimer);
+  notify();
+}
+
 export async function pushNow() {
+  if (!state) return;
   const res = await api.push({
     opening_balance: state.openingBalance,
     contracts: state.contracts.map(stripIdForSync),
@@ -129,5 +147,5 @@ export async function pushNow() {
 
 function stripIdForSync({ id, updated_at, ...rest }) { return rest; }
 
-window.addEventListener('online', () => { patch({ sync: { ...state.sync, online: true } }); pushNow(); });
-window.addEventListener('offline', () => { patch({ sync: { ...state.sync, online: false } }); });
+window.addEventListener('online', () => { if (state) { patch({ sync: { ...state.sync, online: true } }); pushNow(); } });
+window.addEventListener('offline', () => { if (state) patch({ sync: { ...state.sync, online: false } }); });

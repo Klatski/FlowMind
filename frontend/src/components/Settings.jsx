@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import * as storage from '../storage.js';
 import { fmt } from '../cashflow.js';
-import { seedData } from '../seed.js';
+import { seedForAccount } from '../accounts.js';
 import PageHeader from './PageHeader.jsx';
 
-export default function Settings({ state }) {
+export default function Settings({ state, account, onLogout }) {
   const [bal, setBal] = useState(String(state.openingBalance));
 
   function save() { storage.setOpeningBalance(bal); }
   function resync() { storage.pushNow(); }
   function reseed() {
-    if (!confirm('Сбросить локальные данные и загрузить демо-набор?')) return;
-    const seed = seedData();
+    if (!confirm(`Сбросить данные «${account.company_name}» и загрузить демо-набор?`)) return;
+    const seed = seedForAccount(account);
     storage.patch({
       openingBalance: seed.openingBalance,
       contracts: seed.contracts,
@@ -20,13 +20,30 @@ export default function Settings({ state }) {
     });
   }
   function wipe() {
-    if (!confirm('Полностью очистить все данные? Это нельзя отменить.')) return;
+    if (!confirm('Полностью очистить все данные этого аккаунта? Это нельзя отменить.')) return;
     storage.patch({ openingBalance: 0, contracts: [], expenses: [], chatHistory: [] });
   }
 
   return (
     <>
-      <PageHeader title="Настройки" sub="Стартовый остаток и управление локальными данными." />
+      <PageHeader title="Настройки" sub="Управление аккаунтом и локальными данными." />
+
+      <div className="card" style={{ marginBottom: 16 }}>
+        <h3>Текущий аккаунт</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 8, flexWrap: 'wrap' }}>
+          <div className="account-avatar" style={{ background: `linear-gradient(135deg, ${account.accent}, rgba(11,21,48,0.5))`, width: 52, height: 52, fontSize: 18 }}>
+            {account.initials}
+          </div>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ fontSize: 16, fontWeight: 600 }}>{account.company_name}</div>
+            <div className="kpi-sub">
+              {account.type === 'individual' ? 'ИИН' : 'БИН'} · {account.bin.slice(0, 6)} {account.bin.slice(6)} · {account.role}
+            </div>
+            <div className="kpi-sub">Пользователь: {account.user_name}</div>
+          </div>
+          <button className="btn ghost" onClick={onLogout}>⎋ Выйти из аккаунта</button>
+        </div>
+      </div>
 
       <div className="grid cols-2">
         <div className="card">
