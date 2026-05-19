@@ -33,7 +33,8 @@
       "Bash(./node_modules/.bin/esbuild src/seed.js)",
       "Bash(python -c \"from app import db, models; from app.routes import sync, contracts; print\\('backend OK'\\)\")",
       "Bash(./.venv/Scripts/python.exe -c \"from app import db, models; from app.routes import sync, contracts; print\\('backend OK'\\)\")",
-      "Bash(./.venv/Scripts/python.exe *)"
+      "Bash(./.venv/Scripts/python.exe *)",
+      "Bash(PYTHONIOENCODING=utf-8 ./.venv/Scripts/python.exe *)"
     ]
   }
 }
