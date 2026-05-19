@@ -28,6 +28,7 @@ export const api = {
   push: (payload) => call('POST', '/sync/push', payload),
 
   ask: (question, horizonDays = 30) => call('POST', '/ai/ask', { question, horizon_days: horizonDays }),
+  propose: (question, horizonDays = 30) => call('POST', '/ai/propose', { question, horizon_days: horizonDays }),
 
   linkTelegram: () => call('POST', '/telegram/link'),
   linkStatus: (token) => call('GET', `/telegram/status/${token}`),

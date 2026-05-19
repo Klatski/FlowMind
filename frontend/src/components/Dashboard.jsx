@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { advise, fmt, simulate } from '../cashflow.js';
 import * as storage from '../storage.js';
+import { api } from '../api.js';
 import Timeline from './Timeline.jsx';
 import ContractsTable from './ContractsTable.jsx';
 import ExpensesTable from './ExpensesTable.jsx';
@@ -9,6 +10,9 @@ import FormulaRef from './FormulaRef.jsx';
 
 export default function Dashboard({ state }) {
   const [horizon, setHorizon] = useState(30);
+  const [proposal, setProposal] = useState(null);   // { explanation, risk_assessment, actions, applied, skipped, preview }
+  const [proposing, setProposing] = useState(false);
+  const [proposeError, setProposeError] = useState(null);
 
   const sim = useMemo(
     () => simulate({
@@ -35,6 +39,29 @@ export default function Dashboard({ state }) {
       if (e) storage.updateExpense(e.id, { ...e, due_date: s.payload.to_date, status: 'deferred' });
     }
   }
+
+  async function requestProposal() {
+    setProposing(true);
+    setProposeError(null);
+    const question = hasGap
+      ? `Закрой кассовый разрыв ${firstGap.start}–${firstGap.end} (глубина ${firstGap.max_depth} ₸). Предложи один сценарий.`
+      : 'Предложи действие для улучшения ликвидности на ближайшие 30 дней.';
+    const res = await api.propose(question, horizon);
+    setProposing(false);
+    if (!res.ok || !res.data?.ok) {
+      setProposeError(res.data?.reason === 'gemini_unavailable'
+        ? 'Gemini не настроен или вернул пустой ответ. Проверьте GEMINI_API_KEY.'
+        : 'Не удалось получить сценарий от AI.');
+      setProposal(null);
+      return;
+    }
+    setProposal(res.data);
+  }
+
+  function clearProposal() { setProposal(null); setProposeError(null); }
+
+  const previewSeries = proposal?.preview?.series || null;
+  const previewGaps = proposal?.preview?.gaps || null;
 
   return (
     <>
@@ -96,7 +123,43 @@ export default function Dashboard({ state }) {
               <option value={90}>90 дней</option>
             </select>
           </div>
-          <Timeline series={sim.series} gaps={sim.gaps} />
+          <Timeline series={sim.series} gaps={sim.gaps}
+                    previewSeries={previewSeries} previewGaps={previewGaps} />
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '10px 10px 4px', flexWrap: 'wrap' }}>
+            <button className="btn sm" onClick={requestProposal} disabled={proposing}>
+              {proposing ? 'AI думает…' : '✨ AI-сценарий'}
+            </button>
+            {proposal && (
+              <button className="btn sm ghost" onClick={clearProposal}>Скрыть превью</button>
+            )}
+            {proposeError && (
+              <span style={{ color: 'var(--danger)', fontSize: 12 }}>{proposeError}</span>
+            )}
+            {proposal && (
+              <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
+                Бирюзовая пунктирная линия — прогноз после применения сценария.
+              </span>
+            )}
+          </div>
+          {proposal && (
+            <div className="suggestion" style={{ margin: '10px 10px 6px', borderColor: 'rgba(34, 211, 238, 0.4)' }}>
+              <div className="head" style={{ color: '#22d3ee' }}>AI-сценарий (предпросмотр)</div>
+              <div className="detail">{proposal.explanation}</div>
+              {proposal.risk_assessment && (
+                <div className="meta"><span>Риск:</span><span style={{ color: 'var(--text-2)' }}>{proposal.risk_assessment}</span></div>
+              )}
+              {proposal.applied?.length > 0 && (
+                <ul style={{ margin: '4px 0 0 18px', color: 'var(--text-2)', fontSize: 12 }}>
+                  {proposal.applied.map((line, i) => <li key={i}>{line}</li>)}
+                </ul>
+              )}
+              {proposal.skipped?.length > 0 && (
+                <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4 }}>
+                  Пропущено: {proposal.skipped.join('; ')}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="card">
