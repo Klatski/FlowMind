@@ -20,11 +20,16 @@ router = APIRouter(prefix="/api/sync", tags=["sync"])
 
 class SyncContract(BaseModel):
     client_id: str
+    counterparty_name: str = ""
     title: str
     amount: float
     currency: str = "KZT"
     expected_date: str
     status: str = "expected"
+    receipt_type: str = "one_time"
+    installment_index: int | None = None
+    installment_total: int | None = None
+    frequency: str | None = None
     note: str = ""
 
 

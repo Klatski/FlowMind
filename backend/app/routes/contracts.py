@@ -12,12 +12,17 @@ router = APIRouter(prefix="/api/contracts", tags=["contracts"])
 
 
 class ContractIn(BaseModel):
-    client_id: str
-    title: str
+    client_id: str                               # BIN, 12 digits in KZ
+    counterparty_name: str = ""
+    title: str                                   # payment purpose
     amount: float
     currency: str = "KZT"
-    expected_date: str  # ISO
+    expected_date: str                           # ISO
     status: str = "expected"
+    receipt_type: str = "one_time"
+    installment_index: Optional[int] = None
+    installment_total: Optional[int] = None
+    frequency: Optional[str] = None
     note: str = ""
 
 
@@ -68,11 +73,16 @@ def _to_dict(c: Contract) -> dict:
     return {
         "id": c.id,
         "client_id": c.client_id,
+        "counterparty_name": c.counterparty_name or "",
         "title": c.title,
         "amount": c.amount,
         "currency": c.currency,
         "expected_date": c.expected_date.isoformat(),
         "status": c.status,
+        "receipt_type": c.receipt_type or "one_time",
+        "installment_index": c.installment_index,
+        "installment_total": c.installment_total,
+        "frequency": c.frequency,
         "note": c.note,
         "updated_at": c.updated_at.isoformat(),
     }

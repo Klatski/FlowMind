@@ -4,16 +4,88 @@ import { addDays, format } from 'date-fns';
 const iso = (d) => format(d, 'yyyy-MM-dd');
 
 export function seedData(today = new Date()) {
+  const contracts = [];
+
+  // One-time payment.
+  contracts.push({
+    id: 'c1',
+    client_id: '180440012345',
+    counterparty_name: 'ТОО «Alpha Trade»',
+    title: 'Оплата контракта Q2',
+    amount: 18_500_000, currency: 'KZT',
+    expected_date: iso(addDays(today, 3)),
+    status: 'expected',
+    receipt_type: 'one_time',
+    installment_index: null, installment_total: null, frequency: null,
+    note: '',
+  });
+
+  // 4-installment schedule for AO «KaspiPay».
+  const schedStart = addDays(today, 7);
+  for (let i = 0; i < 4; i++) {
+    contracts.push({
+      id: 'c2_' + (i + 1),
+      client_id: '050940000123',
+      counterparty_name: 'АО «KaspiPay»',
+      title: 'Эквайринг — рассрочка договора',
+      amount: 5_500_000, currency: 'KZT',
+      expected_date: iso(addDays(schedStart, i * 30)),
+      status: 'expected',
+      receipt_type: 'installment',
+      installment_index: i + 1, installment_total: 4,
+      frequency: 'monthly',
+      note: '',
+    });
+  }
+
+  // SEPA one-off.
+  contracts.push({
+    id: 'c3',
+    client_id: '210340007788',
+    counterparty_name: 'ТОО «BetaPay KZ»',
+    title: 'SEPA — поступление по инвойсу №142',
+    amount: 15_750_000, currency: 'KZT',
+    expected_date: iso(addDays(today, 22)),
+    status: 'expected',
+    receipt_type: 'one_time',
+    installment_index: null, installment_total: null, frequency: null,
+    note: '',
+  });
+
+  // Recurring monthly subscription fee, 3 months visible in horizon.
+  for (let i = 0; i < 3; i++) {
+    contracts.push({
+      id: 'c4_' + (i + 1),
+      client_id: '170240005566',
+      counterparty_name: 'ТОО «Sapa Logistics»',
+      title: 'Ежемесячная комиссия за обслуживание',
+      amount: 1_400_000, currency: 'KZT',
+      expected_date: iso(addDays(today, 9 + i * 30)),
+      status: 'expected',
+      receipt_type: 'recurring',
+      installment_index: null, installment_total: null,
+      frequency: 'monthly',
+      note: '',
+    });
+  }
+
+  // License payment, one-off.
+  contracts.push({
+    id: 'c5',
+    client_id: '230540009912',
+    counterparty_name: 'АО «Tengri Bank»',
+    title: 'Лицензионный платёж',
+    amount: 6_800_000, currency: 'KZT',
+    expected_date: iso(addDays(today, 27)),
+    status: 'expected',
+    receipt_type: 'one_time',
+    installment_index: null, installment_total: null, frequency: null,
+    note: '',
+  });
+
   return {
     openingBalance: 5_000_000,
-    contracts: [
-      { id: 'c1', client_id: 'C-001', title: 'Клиент №1 — оплата контракта Q2', amount: 18_500_000, currency: 'KZT', expected_date: iso(addDays(today, 3)), status: 'expected', note: '' },
-      { id: 'c2', client_id: 'C-002', title: 'Клиент №2 — SWIFT поступление', amount: 22_000_000, currency: 'KZT', expected_date: iso(addDays(today, 18)), status: 'expected', note: '' },
-      { id: 'c3', client_id: 'C-003', title: 'Клиент №3 — карточный клиринг', amount: 9_300_000, currency: 'KZT', expected_date: iso(addDays(today, 14)), status: 'expected', note: '' },
-      { id: 'c4', client_id: 'C-004', title: 'Клиент №4 — SEPA перевод', amount: 15_750_000, currency: 'KZT', expected_date: iso(addDays(today, 22)), status: 'expected', note: '' },
-      { id: 'c5', client_id: 'C-005', title: 'Клиент №5 — комиссии за услуги', amount: 4_200_000, currency: 'KZT', expected_date: iso(addDays(today, 9)), status: 'expected', note: '' },
-      { id: 'c6', client_id: 'C-006', title: 'Клиент №6 — лицензионные платежи', amount: 6_800_000, currency: 'KZT', expected_date: iso(addDays(today, 27)), status: 'expected', note: '' },
-    ],
+    contracts,
     expenses: [
       { id: 'e1', category: 'salary', title: 'Зарплата (1-я часть)', amount: 12_000_000, currency: 'KZT', due_date: iso(addDays(today, 5)), status: 'scheduled', note: '' },
       { id: 'e2', category: 'taxes', title: 'ИПН и соц.отчисления', amount: 4_500_000, currency: 'KZT', due_date: iso(addDays(today, 6)), status: 'scheduled', note: '' },
