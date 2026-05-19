@@ -126,7 +126,7 @@ PROPOSE_SYSTEM_PROMPT = """
 Ты — Treasury AI Assistant. Тебе дают текущее состояние ликвидности компании
 и (если есть) обнаруженный кассовый разрыв. Твоя задача — предложить ровно
 один конкретный сценарий, который закрывает разрыв или улучшает ликвидность,
-выраженный как список действий в JSON по предоставленной схеме.
+выраженный как список действий в JSON.
 
 Жёсткие правила:
   • Ты НЕ считаешь балансы и не выдумываешь прогнозные числа — это делает
@@ -150,6 +150,18 @@ PROPOSE_SYSTEM_PROMPT = """
   add_credit_line  — открыть овердрафт у банка-партнёра (тело сразу,
                      погашение позже).
                      Поля: amount, currency, start_date, repay_date.
+
+Всегда отвечай строго JSON следующей структуры (без markdown, без ```):
+{
+  "explanation": "...",
+  "risk_assessment": "...",
+  "actions": [
+    {
+      "type": "shift_payment|request_advance|add_credit_line",
+      ... поля действия ...
+    }
+  ]
+}
 """.strip()
 
 
@@ -224,12 +236,12 @@ def propose_scenario(
             prompt,
             generation_config={
                 "response_mime_type": "application/json",
-                "response_schema": PROPOSAL_JSON_SCHEMA,
                 "temperature": 0.4,
             },
         )
         raw = (resp.text or "").strip()
         if not raw:
+            log.warning("propose_scenario: Gemini returned empty response")
             return None
         data = json.loads(raw)
         return AssistantProposal(
@@ -238,5 +250,5 @@ def propose_scenario(
             actions=[ProposedAction(**a) for a in data.get("actions", [])],
         )
     except Exception as exc:  # noqa: BLE001 — never crash the request path
-        log.warning("Gemini propose_scenario failed: %s", exc)
+        log.warning("Gemini propose_scenario failed: %s", exc, exc_info=True)
         return None

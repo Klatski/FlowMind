@@ -8,7 +8,7 @@ from sqlmodel import Session
 from .alerts import start_alerts
 from .config import settings
 from .db import engine, init_db
-from .routes import ai, cashflow, contracts, expenses, sync, telegram
+from .routes import admin, ai, cashflow, contracts, expenses, sync, telegram
 from .services.seed import seed_if_empty
 from .services.telegram_bot import start_bot_thread
 
@@ -42,6 +42,7 @@ app.include_router(cashflow.router)
 app.include_router(ai.router)
 app.include_router(telegram.router)
 app.include_router(sync.router)
+app.include_router(admin.router)
 
 
 @app.get("/api/health")

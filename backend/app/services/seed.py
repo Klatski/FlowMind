@@ -16,10 +16,32 @@ COUNTERPARTIES = [
 ]
 
 
+def _has_proper_names(session: Session) -> bool:
+    """Return True if at least one contract has a real company name (ТОО or АО)."""
+    contracts = session.exec(select(Contract)).all()
+    return any(
+        ('ТОО' in (c.counterparty_name or '') or 'АО' in (c.counterparty_name or ''))
+        for c in contracts
+    )
+
+
+def _clear_all(session: Session) -> None:
+    for c in session.exec(select(Contract)).all():
+        session.delete(c)
+    for e in session.exec(select(Expense)).all():
+        session.delete(e)
+    for s in session.exec(select(AccountSnapshot)).all():
+        session.delete(s)
+    session.commit()
+
+
 def seed_if_empty(session: Session) -> None:
     existing = session.exec(select(Contract)).first()
     if existing:
-        return
+        if _has_proper_names(session):
+            return
+        # DB has data but names look wrong (e.g. С-001) — clear and reseed
+        _clear_all(session)
 
     today = date.today()
 
