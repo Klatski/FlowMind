@@ -40,12 +40,26 @@ function Message({ role, content }) {
   );
 }
 
-export default function AIChat({ state }) {
+export default function AIChat({ state, onShowOnChart, proposing = false }) {
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const scrollerRef = useRef(null);
   const textareaRef = useRef(null);
   const showSuggested = state.chatHistory.length <= 1;
+
+  const lastAssistantIdx = (() => {
+    for (let i = state.chatHistory.length - 1; i >= 0; i--) {
+      if (state.chatHistory[i].role === 'assistant') return i;
+    }
+    return -1;
+  })();
+
+  function findPrecedingUserQuestion(idx) {
+    for (let i = idx - 1; i >= 0; i--) {
+      if (state.chatHistory[i].role === 'user') return state.chatHistory[i].content;
+    }
+    return '';
+  }
 
   useEffect(() => {
     if (scrollerRef.current) scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
@@ -107,7 +121,35 @@ export default function AIChat({ state }) {
         )}
 
         {state.chatHistory.map((m, i) => (
-          <Message key={i} role={m.role} content={m.content} />
+          <div key={i}>
+            <Message role={m.role} content={m.content} />
+            {m.role === 'assistant' && i === lastAssistantIdx && !busy && onShowOnChart && (
+              <div className="chat-action-bar">
+                <button
+                  className="chat-action-btn"
+                  onClick={() => onShowOnChart(findPrecedingUserQuestion(i) || m.content)}
+                  disabled={proposing}
+                  title="Показать AI-сценарий на графике дашборда"
+                >
+                  {proposing ? (
+                    <>
+                      <span className="ai-send-spinner" style={{ width: 12, height: 12, borderWidth: 1.5 }} />
+                      AI считает сценарий…
+                    </>
+                  ) : (
+                    <>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 3v18h18" />
+                        <path d="M7 14l4-4 4 4 5-7" />
+                      </svg>
+                      Посмотреть на графике
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
         ))}
 
         {busy && (

@@ -64,7 +64,8 @@ def _suggest_for_gap(
     # 1) Defer expenses that fall inside the gap window — largest first.
     in_gap_expenses = [
         e for e in expenses
-        if e.status == "scheduled" and gap_start <= e.due_date <= gap_end and e.id not in seen_expense_ids
+        if e.status == "scheduled" and e.category != "taxes"
+        and gap_start <= e.due_date <= gap_end and e.id not in seen_expense_ids
     ]
     in_gap_expenses.sort(key=lambda e: e.amount, reverse=True)
     for e in in_gap_expenses[:3]:

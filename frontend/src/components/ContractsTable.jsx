@@ -194,41 +194,43 @@ export default function ContractsTable({ state }) {
   return (
     <div className="card">
       <h3>Контракты — ожидаемые поступления</h3>
-      <table className="data" style={{ marginBottom: 12 }}>
-        <thead>
-          <tr>
-            <th>Контрагент</th>
-            <th>Назначение платежа</th>
-            <th className="num">Сумма, ₸</th>
-            <th>Дата</th>
-            <th>Тип</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {state.contracts.length === 0 && <tr><td colSpan={6} className="empty">Нет контрактов</td></tr>}
-          {state.contracts.map((c) => (
-            <tr key={c.id}>
-              <td>
-                <div style={{ fontWeight: 600 }}>{c.counterparty_name || '—'}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-3)', fontVariantNumeric: 'tabular-nums' }}>
-                  БИН {c.client_id}
-                </div>
-              </td>
-              <td>{c.title}</td>
-              <td className="num" style={{ color: '#22c55e' }}>+{fmt(c.amount)}</td>
-              <td style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtDate(c.expected_date)}</td>
-              <td><span className="tag">{kindLabel(c)}</span></td>
-              <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                <button className="btn sm ghost" title="Редактировать" aria-label="Редактировать"
-                        onClick={() => startEdit(c)}>✎</button>
-                <button className="btn sm ghost" title="Удалить" aria-label="Удалить"
-                        onClick={() => storage.removeContract(c.id)}>×</button>
-              </td>
+      <div className="table-scroll" style={{ marginBottom: 12 }}>
+        <table className="data">
+          <thead>
+            <tr>
+              <th>Контрагент</th>
+              <th>Назначение платежа</th>
+              <th className="num">Сумма, ₸</th>
+              <th>Дата</th>
+              <th>Тип</th>
+              <th></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {state.contracts.length === 0 && <tr><td colSpan={6} className="empty">Нет контрактов</td></tr>}
+            {state.contracts.map((c) => (
+              <tr key={c.id}>
+                <td>
+                  <div style={{ fontWeight: 600 }}>{c.counterparty_name || '—'}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-3)', fontVariantNumeric: 'tabular-nums' }}>
+                    БИН {c.client_id}
+                  </div>
+                </td>
+                <td>{c.title}</td>
+                <td className="num" style={{ color: '#22c55e' }}>+{fmt(c.amount)}</td>
+                <td style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtDate(c.expected_date)}</td>
+                <td><span className="tag">{kindLabel(c)}</span></td>
+                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <button className="btn sm ghost" title="Редактировать" aria-label="Редактировать"
+                          onClick={() => startEdit(c)}>✎</button>
+                  <button className="btn sm ghost" title="Удалить" aria-label="Удалить"
+                          onClick={() => storage.removeContract(c.id)}>×</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <form className="form" onSubmit={submit}>
         {!isEdit && (

@@ -75,7 +75,7 @@ export function advise({ openingBalance, contracts, expenses }, sim) {
 
   for (const gap of sim.gaps) {
     const inGap = expenses.filter(
-      (e) => e.status === 'scheduled' && e.due_date >= gap.start && e.due_date <= gap.end && !seenExpenseIds.has(e.id),
+      (e) => e.status === 'scheduled' && e.category !== 'taxes' && e.due_date >= gap.start && e.due_date <= gap.end && !seenExpenseIds.has(e.id),
     );
     inGap.sort((a, b) => b.amount - a.amount);
     for (const e of inGap.slice(0, 3)) {

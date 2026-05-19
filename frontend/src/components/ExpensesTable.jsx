@@ -32,25 +32,27 @@ export default function ExpensesTable({ state }) {
   return (
     <div className="card">
       <h3>Расходы — запланированные списания</h3>
-      <table className="data" style={{ marginBottom: 12 }}>
-        <thead><tr><th>Категория</th><th>Назначение</th><th className="num">Сумма</th><th>Дата</th><th>Стат.</th><th></th></tr></thead>
-        <tbody>
-          {state.expenses.length === 0 && <tr><td colSpan={6} className="empty">Нет расходов</td></tr>}
-          {state.expenses.map((e) => (
-            <tr key={e.id}>
-              <td><span className="tag">{labelCat(e.category)}</span></td>
-              <td>{e.title}</td>
-              <td className="num" style={{ color: '#f59e0b' }}>−{fmt(e.amount)}</td>
-              <td>{e.due_date}</td>
-              <td>{e.status === 'deferred' ? <span className="tag">отложен</span> : ''}</td>
-              <td style={{ textAlign: 'right' }}>
-                <button className="btn sm ghost" onClick={() => edit(e)}>✎</button>
-                <button className="btn sm ghost" onClick={() => storage.removeExpense(e.id)}>×</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="table-scroll" style={{ marginBottom: 12 }}>
+        <table className="data">
+          <thead><tr><th>Категория</th><th>Назначение</th><th className="num">Сумма</th><th>Дата</th><th>Стат.</th><th></th></tr></thead>
+          <tbody>
+            {state.expenses.length === 0 && <tr><td colSpan={6} className="empty">Нет расходов</td></tr>}
+            {state.expenses.map((e) => (
+              <tr key={e.id}>
+                <td><span className="tag">{labelCat(e.category)}</span></td>
+                <td>{e.title}</td>
+                <td className="num" style={{ color: '#f59e0b' }}>−{fmt(e.amount)}</td>
+                <td>{e.due_date}</td>
+                <td>{e.status === 'deferred' ? <span className="tag">отложен</span> : ''}</td>
+                <td style={{ textAlign: 'right' }}>
+                  <button className="btn sm ghost" onClick={() => edit(e)}>✎</button>
+                  <button className="btn sm ghost" onClick={() => storage.removeExpense(e.id)}>×</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <form className="form" onSubmit={submit}>
         <label>Категория

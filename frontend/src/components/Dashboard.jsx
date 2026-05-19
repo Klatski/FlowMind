@@ -1,19 +1,22 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { advise, fmt, simulate } from '../cashflow.js';
 import * as storage from '../storage.js';
-import { api } from '../api.js';
 import Timeline from './Timeline.jsx';
 import ContractsTable from './ContractsTable.jsx';
 import ExpensesTable from './ExpensesTable.jsx';
 import PageHeader from './PageHeader.jsx';
 import FormulaRef from './FormulaRef.jsx';
 
-export default function Dashboard({ state }) {
-  const [horizon, setHorizon] = useState(30);
-  const [proposal, setProposal] = useState(null);   // { explanation, risk_assessment, actions, applied, skipped, preview }
-  const [proposing, setProposing] = useState(false);
-  const [proposeError, setProposeError] = useState(null);
-
+export default function Dashboard({
+  state,
+  horizon,
+  setHorizon,
+  proposal,
+  proposing,
+  proposalError,
+  requestProposal,
+  clearProposal,
+}) {
   const sim = useMemo(
     () => simulate({
       openingBalance: state.openingBalance,
@@ -40,25 +43,18 @@ export default function Dashboard({ state }) {
     }
   }
 
-  async function requestProposal() {
-    setProposing(true);
-    setProposeError(null);
+  function onRequestProposal() {
     const question = hasGap
       ? `Закрой кассовый разрыв ${firstGap.start}–${firstGap.end} (глубина ${firstGap.max_depth} ₸). Предложи один сценарий.`
       : 'Предложи действие для улучшения ликвидности на ближайшие 30 дней.';
-    const res = await api.propose(question, horizon);
-    setProposing(false);
-    if (!res.ok || !res.data?.ok) {
-      setProposeError(res.data?.reason === 'gemini_unavailable'
-        ? 'Gemini не настроен или вернул пустой ответ. Проверьте GEMINI_API_KEY.'
-        : 'Не удалось получить сценарий от AI.');
-      setProposal(null);
-      return;
-    }
-    setProposal(res.data);
+    requestProposal(question);
   }
 
-  function clearProposal() { setProposal(null); setProposeError(null); }
+  function applyProposal() {
+    if (!proposal?.actions?.length) return;
+    for (const a of proposal.actions) applyProposalAction(a, state);
+    clearProposal();
+  }
 
   const previewSeries = proposal?.preview?.series || null;
   const previewGaps = proposal?.preview?.gaps || null;
@@ -105,9 +101,9 @@ export default function Dashboard({ state }) {
         </div>
       </div>
 
-      <div className="grid cols-2" style={{ marginBottom: 16 }}>
+      <div className="grid cols-2" style={{ marginBottom: 16, alignItems: 'start' }}>
         <div className="card chart-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 10px 10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 10px 10px', flexWrap: 'wrap', gap: 10 }}>
             <div>
               <h3 style={{ margin: 0 }}>Интерактивный Timeline</h3>
               <div className="kpi-sub">Поступления: +{fmt(totalIn)} ₸ · Списания: −{fmt(totalOut)} ₸</div>
@@ -126,14 +122,20 @@ export default function Dashboard({ state }) {
           <Timeline series={sim.series} gaps={sim.gaps}
                     previewSeries={previewSeries} previewGaps={previewGaps} />
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '10px 10px 4px', flexWrap: 'wrap' }}>
-            <button className="btn sm" onClick={requestProposal} disabled={proposing}>
+            <button className="btn sm" onClick={onRequestProposal} disabled={proposing}>
               {proposing ? 'AI думает…' : '✨ AI-сценарий'}
             </button>
             {proposal && (
-              <button className="btn sm ghost" onClick={clearProposal}>Скрыть превью</button>
+              <>
+                <button className="btn sm" onClick={applyProposal}
+                        style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)', boxShadow: '0 8px 20px rgba(34, 197, 94, 0.35)' }}>
+                  ✓ Применить
+                </button>
+                <button className="btn sm ghost" onClick={clearProposal}>✕ Убрать</button>
+              </>
             )}
-            {proposeError && (
-              <span style={{ color: 'var(--danger)', fontSize: 12 }}>{proposeError}</span>
+            {proposalError && (
+              <span style={{ color: 'var(--danger)', fontSize: 12 }}>{proposalError}</span>
             )}
             {proposal && (
               <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
@@ -202,4 +204,70 @@ function labelKind(k) {
     pull_inflow: 'Аванс от клиента',
     overdraft: 'Овердрафт',
   })[k] || k;
+}
+
+function resolveExpenseFor(action, expenses) {
+  if (action.target_id) {
+    const found = expenses.find((e) => String(e.id) === String(action.target_id));
+    if (found) return found;
+  }
+  if (action.target_title && action.target_date) {
+    const found = expenses.find((e) =>
+      e.title.trim().toLowerCase() === action.target_title.trim().toLowerCase() &&
+      e.due_date === action.target_date,
+    );
+    if (found) return found;
+  }
+  if (action.target_title) {
+    const needle = action.target_title.trim().toLowerCase();
+    const found = expenses.find((e) => e.title.toLowerCase().includes(needle));
+    if (found) return found;
+  }
+  return null;
+}
+
+function applyProposalAction(a, state) {
+  if (a.type === 'shift_payment') {
+    const e = resolveExpenseFor(a, state.expenses);
+    if (e && a.to_date) {
+      storage.updateExpense(e.id, { ...e, due_date: a.to_date, status: 'deferred' });
+    }
+  } else if (a.type === 'request_advance') {
+    if (Number(a.amount) > 0 && a.date) {
+      storage.addContract({
+        client_id: (a.counterparty_bin || '').trim(),
+        counterparty_name: (a.counterparty_name || '').trim(),
+        title: (a.title || 'Запрошенный аванс').trim(),
+        amount: Number(a.amount),
+        currency: a.currency || 'KZT',
+        expected_date: a.date,
+        status: 'expected',
+        receipt_type: 'one_time',
+        note: a.note || 'AI: предложенный аванс',
+      });
+    }
+  } else if (a.type === 'add_credit_line') {
+    if (Number(a.amount) > 0 && a.start_date && a.repay_date) {
+      storage.addContract({
+        client_id: '',
+        counterparty_name: 'Овердрафт банка-партнёра',
+        title: a.title || 'Овердрафт (тело)',
+        amount: Number(a.amount),
+        currency: a.currency || 'KZT',
+        expected_date: a.start_date,
+        status: 'expected',
+        receipt_type: 'one_time',
+        note: a.note || 'AI: предложенная кредитная линия',
+      });
+      storage.addExpense({
+        category: 'other',
+        title: (a.title || 'Овердрафт') + ' — погашение',
+        amount: Number(a.amount),
+        currency: a.currency || 'KZT',
+        due_date: a.repay_date,
+        status: 'scheduled',
+        note: a.note || 'AI: возврат овердрафта',
+      });
+    }
+  }
 }

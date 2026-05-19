@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import * as storage from './storage.js';
+import { api } from './api.js';
 import Dashboard from './components/Dashboard.jsx';
 import AIChat from './components/AIChat.jsx';
 import TelegramSetup from './components/TelegramSetup.jsx';
@@ -15,12 +16,34 @@ const NAV = [
 export default function App() {
   const [state, setState] = useState(storage.getState());
   const [tab, setTab] = useState('dashboard');
+  const [horizon, setHorizon] = useState(30);
+  const [proposal, setProposal] = useState(null);
+  const [proposalError, setProposalError] = useState(null);
+  const [proposing, setProposing] = useState(false);
 
   useEffect(() => {
     const unsub = storage.subscribe(setState);
     storage.init();
     return unsub;
   }, []);
+
+  async function requestProposal(question, { switchToDashboard = false } = {}) {
+    if (switchToDashboard) setTab('dashboard');
+    setProposing(true);
+    setProposalError(null);
+    const res = await api.propose(question, horizon);
+    setProposing(false);
+    if (!res.ok || !res.data?.ok) {
+      setProposalError(res.data?.reason === 'gemini_unavailable'
+        ? 'Gemini не настроен или вернул пустой ответ. Проверьте GEMINI_API_KEY.'
+        : 'Не удалось получить сценарий от AI.');
+      setProposal(null);
+      return;
+    }
+    setProposal(res.data);
+  }
+
+  function clearProposal() { setProposal(null); setProposalError(null); }
 
   if (!state) return <div style={{ padding: 40 }}>Загрузка…</div>;
 
@@ -52,8 +75,25 @@ export default function App() {
       </aside>
 
       <main className={`main ${tab === 'assistant' ? 'main-chat' : ''}`}>
-        {tab === 'dashboard' && <Dashboard state={state} />}
-        {tab === 'assistant' && <AIChat state={state} />}
+        {tab === 'dashboard' && (
+          <Dashboard
+            state={state}
+            horizon={horizon}
+            setHorizon={setHorizon}
+            proposal={proposal}
+            proposing={proposing}
+            proposalError={proposalError}
+            requestProposal={(q) => requestProposal(q)}
+            clearProposal={clearProposal}
+          />
+        )}
+        {tab === 'assistant' && (
+          <AIChat
+            state={state}
+            proposing={proposing}
+            onShowOnChart={(q) => requestProposal(q, { switchToDashboard: true })}
+          />
+        )}
         {tab === 'telegram'  && <TelegramSetup state={state} />}
         {tab === 'settings'  && <Settings state={state} />}
       </main>
