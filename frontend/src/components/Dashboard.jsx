@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { advise, fmt, simulate } from '../cashflow.js';
+import { advise, fmt, isTaxPayment, simulate } from '../cashflow.js';
 import * as storage from '../storage.js';
 import Timeline from './Timeline.jsx';
 import ContractsTable from './ContractsTable.jsx';
@@ -229,9 +229,14 @@ function resolveExpenseFor(action, expenses) {
 function applyProposalAction(a, state) {
   if (a.type === 'shift_payment') {
     const e = resolveExpenseFor(a, state.expenses);
-    if (e && a.to_date) {
-      storage.updateExpense(e.id, { ...e, due_date: a.to_date, status: 'deferred' });
+    if (!e || !a.to_date) return;
+    if (isTaxPayment(e)) {
+      // Налоги и обязательные платежи не переносим — пени по НК РК.
+      // Гард на случай если AI всё же предложил такой shift, а бэк отдал его в actions.
+      console.warn(`Skipped tax shift: ${e.title}`);
+      return;
     }
+    storage.updateExpense(e.id, { ...e, due_date: a.to_date, status: 'deferred' });
   } else if (a.type === 'request_advance') {
     if (Number(a.amount) > 0 && a.date) {
       storage.addContract({

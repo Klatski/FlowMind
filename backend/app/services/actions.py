@@ -28,6 +28,31 @@ from pydantic import BaseModel, Field
 from ..models import Contract, Expense
 
 
+# ── Tax / mandatory payment guard ────────────────────────────────────────
+#
+# Treasury rule: налоговые и обязательные платежи (НДС, ИПН, КПН, соц.отчисления,
+# ОСМС, ОПВ, акциз) НЕ переносятся — за просрочку начисляются пени и штрафы по
+# Налоговому кодексу РК и закону «Об обязательном социальном страховании».
+# Этот guard блокирует любое предложение AI/эвристик отложить такой платёж.
+
+_TAX_CATEGORIES = {"taxes", "tax", "налоги"}
+
+_TAX_TITLE_KEYWORDS = (
+    "ндс", "ипн", "кпн", "налог",
+    "соц.отчислен", "соцотчислен", "соц отчислен",
+    "осмс", "восмс", "опв", "обязательн. пенс", "обяз. пенс",
+    "акциз", "пенс. взнос", "пенс.взнос",
+)
+
+
+def is_tax_payment(expense: Expense) -> bool:
+    """True if the expense is a tax/mandatory contribution that must not be deferred."""
+    if (expense.category or "").strip().lower() in _TAX_CATEGORIES:
+        return True
+    title = (expense.title or "").lower()
+    return any(kw in title for kw in _TAX_TITLE_KEYWORDS)
+
+
 # ── JSON schema fed to Gemini ────────────────────────────────────────────
 #
 # Kept as a single flat object with a `type` discriminator so the schema is
@@ -162,6 +187,12 @@ def apply_actions(
                 skipped.append(
                     f"shift_payment: не найден расход (id={a.target_id!r}, "
                     f"title={a.target_title!r})"
+                )
+                continue
+            if is_tax_payment(e):
+                skipped.append(
+                    f"shift_payment «{e.title}»: перенос налоговых и обязательных "
+                    f"платежей запрещён (пени и штрафы по НК РК)"
                 )
                 continue
             if not a.to_date:

@@ -12,6 +12,7 @@ from datetime import date, timedelta
 from typing import Iterable
 
 from ..models import Contract, Expense
+from .actions import is_tax_payment
 from .cashflow import GapWindow, Simulation, simulate
 
 
@@ -62,9 +63,10 @@ def _suggest_for_gap(
     gap_end = date.fromisoformat(gap.end)
 
     # 1) Defer expenses that fall inside the gap window — largest first.
+    #    Tax/mandatory payments are NEVER candidates — see is_tax_payment().
     in_gap_expenses = [
         e for e in expenses
-        if e.status == "scheduled" and e.category != "taxes"
+        if e.status == "scheduled" and not is_tax_payment(e)
         and gap_start <= e.due_date <= gap_end and e.id not in seen_expense_ids
     ]
     in_gap_expenses.sort(key=lambda e: e.amount, reverse=True)

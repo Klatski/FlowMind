@@ -66,6 +66,23 @@ function windowFrom(window) {
   };
 }
 
+// Treasury rule: налоги и обязательные платежи (НДС, ИПН, КПН, соц.отчисления,
+// ОСМС, ВОСМС, ОПВ, акцизы) НЕЛЬЗЯ переносить — за просрочку начисляются пени
+// и штрафы по НК РК. Проверяем и категорию, и ключевые слова в названии.
+const TAX_CATEGORIES = new Set(['taxes', 'tax', 'налоги']);
+const TAX_TITLE_KEYWORDS = [
+  'ндс', 'ипн', 'кпн', 'налог',
+  'соц.отчислен', 'соцотчислен', 'соц отчислен',
+  'осмс', 'восмс', 'опв', 'обязательн. пенс', 'обяз. пенс',
+  'акциз', 'пенс. взнос', 'пенс.взнос',
+];
+
+export function isTaxPayment(expense) {
+  if (TAX_CATEGORIES.has(String(expense.category || '').trim().toLowerCase())) return true;
+  const title = String(expense.title || '').toLowerCase();
+  return TAX_TITLE_KEYWORDS.some((kw) => title.includes(kw));
+}
+
 // Heuristic advisor — mirrors backend advise() so the UI works offline.
 export function advise({ openingBalance, contracts, expenses }, sim) {
   if (!sim.gaps.length) return [];
@@ -75,7 +92,7 @@ export function advise({ openingBalance, contracts, expenses }, sim) {
 
   for (const gap of sim.gaps) {
     const inGap = expenses.filter(
-      (e) => e.status === 'scheduled' && e.category !== 'taxes' && e.due_date >= gap.start && e.due_date <= gap.end && !seenExpenseIds.has(e.id),
+      (e) => e.status === 'scheduled' && !isTaxPayment(e) && e.due_date >= gap.start && e.due_date <= gap.end && !seenExpenseIds.has(e.id),
     );
     inGap.sort((a, b) => b.amount - a.amount);
     for (const e of inGap.slice(0, 3)) {
