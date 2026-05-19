@@ -54,8 +54,11 @@ a { color: var(--accent-2); }
   padding: 8px 12px 24px;
 }
 .brand-mark {
-  width: 36px; height: 36px; border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  width: 36px; height: 36px; border-radius: 50%;
+  background:
+    linear-gradient(var(--bg-1), var(--bg-1)) padding-box,
+    linear-gradient(135deg, var(--accent), var(--accent-2)) border-box;
+  border: 4px solid transparent;
   box-shadow: 0 8px 20px rgba(59, 130, 246, 0.45);
 }
 .brand-name { font-weight: 700; font-size: 18px; letter-spacing: 0.2px; }
@@ -251,7 +254,7 @@ select option:hover { background-color: #1e3a8a; color: #fff; }
     overflow-y: hidden;
   }
   .brand { padding: 0 8px 0 0; flex-shrink: 0; gap: 10px; }
-  .brand-mark { width: 32px; height: 32px; border-radius: 9px; }
+  .brand-mark { width: 32px; height: 32px; border-radius: 50%; border-width: 3px; }
   .brand-name { font-size: 15px; }
   .brand-tag { display: none; }
   .nav-item { padding: 8px 12px; white-space: nowrap; flex-shrink: 0; font-size: 13px; }
@@ -322,7 +325,7 @@ select option:hover { background-color: #1e3a8a; color: #fff; }
   .main { max-width: 2200px; padding: 48px 64px 96px; }
   .chart-wrap { height: clamp(420px, 36vh, 600px); }
   .brand-name { font-size: 22px; }
-  .brand-mark { width: 44px; height: 44px; border-radius: 12px; }
+  .brand-mark { width: 44px; height: 44px; border-radius: 50%; border-width: 5px; }
   .nav-item { padding: 12px 16px; font-size: 15px; }
 }
 

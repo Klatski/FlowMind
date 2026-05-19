@@ -123,7 +123,7 @@ export default function Dashboard({
                     previewSeries={previewSeries} previewGaps={previewGaps} />
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '10px 10px 4px', flexWrap: 'wrap' }}>
             <button className="btn sm" onClick={onRequestProposal} disabled={proposing}>
-              {proposing ? 'AI думает…' : '✨ AI-сценарий'}
+              {proposing ? 'AI думает…' : 'AI-сценарий'}
             </button>
             {proposal && (
               <>

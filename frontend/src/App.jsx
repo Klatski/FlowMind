@@ -7,10 +7,10 @@ import TelegramSetup from './components/TelegramSetup.jsx';
 import Settings from './components/Settings.jsx';
 
 const NAV = [
-  { id: 'dashboard', label: 'Дашборд', icon: '📊' },
-  { id: 'assistant', label: 'AI Treasury', icon: '🤖' },
-  { id: 'telegram',  label: 'Telegram', icon: '✈️' },
-  { id: 'settings',  label: 'Настройки', icon: '⚙️' },
+  { id: 'dashboard', label: 'Дашборд' },
+  { id: 'assistant', label: 'AI Treasury' },
+  { id: 'telegram',  label: 'Telegram' },
+  { id: 'settings',  label: 'Настройки' },
 ];
 
 export default function App() {
@@ -59,7 +59,7 @@ export default function App() {
         </div>
         {NAV.map((n) => (
           <button key={n.id} className={`nav-item ${tab === n.id ? 'active' : ''}`} onClick={() => setTab(n.id)}>
-            <span>{n.icon}</span><span>{n.label}</span>
+            <span>{n.label}</span>
           </button>
         ))}
         <div className="nav-spacer" />
