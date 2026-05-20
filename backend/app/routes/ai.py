@@ -62,6 +62,22 @@ def propose(payload: AskIn, session: Session = Depends(get_session)) -> dict:
     new_contracts, new_expenses, report = apply_actions(contracts, expenses, proposal.actions)
     preview = simulate(opening, new_contracts, new_expenses, horizon_days=payload.horizon_days)
 
+    # Не показываем сценарий, который ухудшает прогноз: если минимальный баланс
+    # после применения ниже текущего, график станет хуже, чем есть. Запас 1 ₸ —
+    # на ошибки округления.
+    if preview.min_balance < current.min_balance - 1:
+        return {
+            "ok": False,
+            "reason": "not_improving",
+            "explanation": proposal.explanation,
+            "risk_assessment": proposal.risk_assessment,
+            "actions": [],
+            "applied": [],
+            "skipped": report.skipped,
+            "current": current.to_dict(),
+            "preview": None,
+        }
+
     return {
         "ok": True,
         "explanation": proposal.explanation,

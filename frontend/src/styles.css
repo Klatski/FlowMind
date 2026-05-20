@@ -290,13 +290,14 @@ select option:hover { background-color: #1e3a8a; color: #fff; }
   .card { padding: 14px; border-radius: 12px; }
   .grid { gap: 10px; }
   .sync-pill { display: none; }
-  .nav-item span:last-child { display: none; }
-  .nav-item { padding: 8px 10px; font-size: 16px; line-height: 1; }
-  .nav-item span:first-child { font-size: 18px; }
+  .brand-name { display: none; }
+  .nav-item { padding: 8px 11px; font-size: 13px; white-space: nowrap; }
   .page-title { font-size: 18px; }
   .kpi { font-size: 22px; }
   table.data { font-size: 12px; }
   table.data th, table.data td { padding: 6px 8px; }
+  /* 16px keeps iOS Safari from auto-zooming the viewport on input focus */
+  .form input, .form select, .form textarea, .ai-textarea, input[type="number"] { font-size: 16px; }
   .chat-bubble { padding: 9px 13px; font-size: 13px; max-width: 84vw; }
   .chat-avatar { width: 28px; height: 28px; }
   .ai-chat-header { padding: 10px 14px; }

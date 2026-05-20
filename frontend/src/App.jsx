@@ -51,9 +51,14 @@ export default function App() {
     const res = await api.propose(question, horizon);
     setProposing(false);
     if (!res.ok || !res.data?.ok) {
-      setProposalError(res.data?.reason === 'gemini_unavailable'
-        ? 'Gemini не настроен или вернул пустой ответ. Проверьте GEMINI_API_KEY.'
-        : 'Не удалось получить сценарий от AI.');
+      const reason = res.data?.reason;
+      let message = 'Не удалось получить сценарий от AI.';
+      if (reason === 'gemini_unavailable') {
+        message = 'Gemini не настроен или вернул пустой ответ. Проверьте GEMINI_API_KEY.';
+      } else if (reason === 'not_improving') {
+        message = 'AI не нашёл сценарий, который улучшил бы прогноз — все варианты ухудшают баланс. Текущий план уже лучше.';
+      }
+      setProposalError(message);
       setProposal(null);
       return;
     }

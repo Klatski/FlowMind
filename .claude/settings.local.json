@@ -37,7 +37,8 @@
       "Bash(PYTHONIOENCODING=utf-8 ./.venv/Scripts/python.exe *)",
       "Bash(./node_modules/.bin/esbuild --loader:.jsx=jsx src/components/Timeline.jsx)",
       "Bash(./node_modules/.bin/esbuild --loader:.jsx=jsx src/components/Dashboard.jsx)",
-      "Bash(./node_modules/.bin/vite build *)"
+      "Bash(./node_modules/.bin/vite build *)",
+      "Bash(npm run *)"
     ]
   }
 }
