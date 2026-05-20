@@ -80,6 +80,10 @@ a { color: var(--accent-2); }
   background: rgba(59, 130, 246, 0.10);
   border-color: rgba(59, 130, 246, 0.35);
 }
+.nav-item-icon {
+  display: flex; align-items: center; flex-shrink: 0;
+  color: currentColor; opacity: 0.85;
+}
 .nav-spacer { flex: 1; }
 .sync-pill {
   margin-top: 10px;
@@ -226,6 +230,10 @@ select option:hover { background-color: #1e3a8a; color: #fff; }
 
 .empty { color: var(--text-3); font-style: italic; padding: 24px; text-align: center; }
 
+/* Mobile-only elements — hidden on desktop, shown via @media below */
+.app-header { display: none; }
+.bottom-nav  { display: none; }
+
 /* ── Responsive breakpoints ──────────────────────────────────────── */
 
 /* Tablets landscape / small laptops */
@@ -236,39 +244,18 @@ select option:hover { background-color: #1e3a8a; color: #fff; }
   .grid.cols-2 { grid-template-columns: 1fr; }
 }
 
-/* Tablets portrait — sidebar becomes top horizontal bar */
+/* Tablets portrait + phones — bottom nav layout */
 @media (max-width: 860px) {
   .app {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: 60px 1fr 64px;
     height: 100dvh;
   }
-  .sidebar {
-    flex-direction: row;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 14px;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-  .brand { padding: 0 8px 0 0; flex-shrink: 0; gap: 10px; }
-  .brand-mark { width: 32px; height: 32px; border-radius: 50%; border-width: 3px; }
-  .brand-name { font-size: 15px; }
-  .brand-tag { display: none; }
-  .nav-item { padding: 8px 12px; white-space: nowrap; flex-shrink: 0; font-size: 13px; }
-  .nav-spacer { display: none; }
-  .sync-pill {
-    margin: 0 0 0 auto;
-    padding: 6px 10px;
-    border-top: none;
-    border-left: 1px solid var(--border);
-    flex-shrink: 0;
-    font-size: 11px;
-  }
-  .sync-pill > div { display: none; }
-  .main { padding: 18px 16px 32px; max-width: 100%; }
+  .sidebar { display: none; }
+  .app-header { display: flex; }
+  .bottom-nav { display: flex; }
+
+  .main { padding: 18px 16px 24px; max-width: 100%; }
   .grid.cols-3, .grid.cols-3 > .card:nth-child(3), .grid.cols-2 { grid-template-columns: 1fr; grid-column: auto; }
   .page-header { flex-direction: column; align-items: stretch; padding-bottom: 14px; margin-bottom: 14px; gap: 10px; }
   .page-header-actions { padding-top: 0; }
@@ -281,17 +268,23 @@ select option:hover { background-color: #1e3a8a; color: #fff; }
   .ai-chat-body { padding: 18px 16px; gap: 14px; }
   .ai-chat-footer { padding: 12px 16px 16px; }
   .chat-bubble { max-width: 78vw; }
+
+  /* Header account card: show info, align right */
+  .header-account-card { margin: 0; flex-shrink: 1; min-width: 0; max-width: 220px; }
+  .header-account-card .account-info { display: block; }
+  .header-account-card .account-chevron { display: block; }
+  .header-account-card .account-switcher {
+    top: calc(100% + 8px); right: 0; left: auto; width: 260px;
+  }
 }
 
 /* Phones */
 @media (max-width: 520px) {
   :root { font-size: 15px; }
-  .main { padding: 14px 12px 28px; }
+  .app { grid-template-rows: 56px 1fr 60px; }
+  .main { padding: 14px 12px 20px; }
   .card { padding: 14px; border-radius: 12px; }
   .grid { gap: 10px; }
-  .sync-pill { display: none; }
-  .brand-name { display: none; }
-  .nav-item { padding: 8px 11px; font-size: 13px; white-space: nowrap; }
   .page-title { font-size: 18px; }
   .kpi { font-size: 22px; }
   table.data { font-size: 12px; }
@@ -310,6 +303,13 @@ select option:hover { background-color: #1e3a8a; color: #fff; }
   .fr-sym { min-width: 110px; font-size: 13px; }
   .fr-def-text { font-size: 12px; }
   .fr-row { font-size: 14px; gap: 6px; }
+
+  /* Compact header on small phones */
+  .app-header { padding: 0 12px; }
+  .brand-tag { display: none; }
+  .header-account-card { max-width: 160px; }
+  .header-account-card .account-meta { display: none; }
+  .bottom-nav-label { font-size: 9px; }
 }
 
 /* Large desktops */
@@ -919,13 +919,61 @@ select option:hover { background-color: #1e3a8a; color: #fff; }
   box-shadow: none;
 }
 
-@media (max-width: 860px) {
-  .account-card { margin: 0 8px 0 0; flex-shrink: 0; }
-  .account-card-inner { padding: 6px 10px; }
-  .account-info { display: none; }
-  .account-chevron { display: none; }
-  .account-switcher {
-    top: calc(100% + 8px); left: auto; right: 0;
-    width: 260px;
-  }
+/* ── Mobile top header ───────────────────────────────────────────── */
+.app-header {
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  gap: 10px;
+  background: linear-gradient(180deg, rgba(11, 21, 48, 0.98), rgba(7, 13, 32, 0.98));
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 40;
+}
+.app-header-brand {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.app-header-right {
+  display: flex; align-items: center; gap: 10px;
+  min-width: 0; flex-shrink: 1;
+}
+
+/* ── Mobile bottom navigation bar ───────────────────────────────── */
+.bottom-nav {
+  align-items: stretch;
+  background: linear-gradient(0deg, rgba(7, 13, 32, 0.98), rgba(11, 21, 48, 0.98));
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  position: relative;
+  z-index: 40;
+}
+.bottom-nav-item {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 2px;
+  padding: 6px 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.bottom-nav-item.active { color: var(--accent); }
+.bottom-nav-icon {
+  width: 44px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+.bottom-nav-item.active .bottom-nav-icon {
+  background: rgba(59, 130, 246, 0.14);
+}
+.bottom-nav-label {
+  font-size: 10px; font-weight: 500;
+  letter-spacing: 0.01em; line-height: 1;
+  white-space: nowrap;
 }

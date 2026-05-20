@@ -38,7 +38,14 @@
       "Bash(./node_modules/.bin/esbuild --loader:.jsx=jsx src/components/Timeline.jsx)",
       "Bash(./node_modules/.bin/esbuild --loader:.jsx=jsx src/components/Dashboard.jsx)",
       "Bash(./node_modules/.bin/vite build *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(npx playwright *)",
+      "Bash(Read C:\\\\Users\\\\LapToP\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--IT-FlowMind\\\\26eb5eb7-524c-475c-8be4-5445fafce344\\\\tasks\\\\bidfoio9m.output)",
+      "Bash(node C:/Users/LapToP/AppData/Local/Temp/check_mobile.mjs)",
+      "Bash(npm list *)",
+      "Read(//c/Users/LapToP/AppData/Roaming/npm/node_modules/**)",
+      "Bash(npm install *)",
+      "Bash(node -e ' *)"
     ]
   }
 }
